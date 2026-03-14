@@ -1,0 +1,7 @@
+{
+  "name": "Remix: AI Visualify Engine",
+  "description": "Transform theoretical or abstract concepts into visual learning stories and animations using AI.",
+  "requestFramePermissions": [
+    "microphone"
+  ]
+}

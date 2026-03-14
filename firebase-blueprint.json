@@ -1,0 +1,177 @@
+{
+  "entities": {
+    "User": {
+      "title": "User",
+      "description": "User profile and statistics",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "email": { "type": "string" },
+        "displayName": { "type": "string" },
+        "photoURL": { "type": "string" },
+        "headline": { "type": "string" },
+        "aboutMe": { "type": "string" },
+        "experience": { "type": "string" },
+        "qualifications": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "institution": { "type": "string" },
+              "year": { "type": "string" }
+            }
+          }
+        },
+        "followers": { "type": "number" },
+        "following": { "type": "number" },
+        "stats": {
+          "type": "object",
+          "properties": {
+            "score": { "type": "number" },
+            "streak": { "type": "number" },
+            "maxStreak": { "type": "number" },
+            "accuracy": { "type": "number" },
+            "level": { "type": "number" },
+            "xp": { "type": "number" },
+            "problemsSolved": { "type": "number" },
+            "totalSubmissions": { "type": "number" },
+            "correctSubmissions": { "type": "number" },
+            "incorrectSubmissions": { "type": "number" },
+            "practiceScore": { "type": "number" },
+            "instituteRank": { "type": "number" },
+            "articlesPublished": { "type": "number" },
+            "potdStreak": { "type": "number" },
+            "potdMaxStreak": { "type": "number" },
+            "potdsSolved": { "type": "number" },
+            "submissions": { "type": "object" },
+            "problemsBreakdown": {
+              "type": "object",
+              "properties": {
+                "school": { "type": "number" },
+                "basic": { "type": "number" },
+                "easy": { "type": "number" },
+                "medium": { "type": "number" },
+                "hard": { "type": "number" }
+              }
+            }
+          }
+        },
+        "badges": { "type": "array", "items": { "type": "string" } },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "updatedAt": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Quiz": {
+      "title": "Quiz",
+      "description": "Generated quiz data",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "questions": { "type": "array" },
+        "createdBy": { "type": "string" },
+        "createdAt": { "type": "string" }
+      }
+    },
+    "QuizAttempt": {
+      "title": "QuizAttempt",
+      "description": "User quiz results",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "quizId": { "type": "string" },
+        "userId": { "type": "string" },
+        "score": { "type": "number" },
+        "correctIds": { "type": "array" },
+        "incorrectIds": { "type": "array" },
+        "timestamp": { "type": "string" }
+      }
+    },
+    "Contest": {
+      "title": "Contest",
+      "description": "Competition data",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "title": { "type": "string" },
+        "startTime": { "type": "string" },
+        "endTime": { "type": "string" },
+        "participants": { "type": "number" }
+      }
+    },
+    "Institution": {
+      "title": "Institution",
+      "description": "School/College rankings",
+      "type": "object",
+      "properties": {
+        "id": { "type": "string" },
+        "name": { "type": "string" },
+        "type": { "type": "string" },
+        "totalScore": { "type": "number" }
+      }
+    },
+    "Notification": {
+      "title": "Notification",
+      "description": "User notifications",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "title": { "type": "string" },
+        "message": { "type": "string" },
+        "type": { "type": "string" },
+        "read": { "type": "boolean" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
+    },
+    "ErrorNote": {
+      "title": "ErrorNote",
+      "description": "Notes on quiz errors",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "questionId": { "type": "string" },
+        "question": { "type": "string" },
+        "correctAnswer": { "type": "string" },
+        "userAnswer": { "type": "string" },
+        "note": { "type": "string" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
+    },
+    "Message": {
+      "title": "Message",
+      "description": "Direct messages between users",
+      "type": "object",
+      "properties": {
+        "text": { "type": "string" },
+        "senderId": { "type": "string" },
+        "receiverId": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" },
+        "read": { "type": "boolean" }
+      }
+    },
+    "SavedContent": {
+      "title": "SavedContent",
+      "description": "User saved generated content",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "type": { "type": "string" },
+        "title": { "type": "string" },
+        "data": { "type": "object" },
+        "timestamp": { "type": "string", "format": "date-time" }
+      }
+    }
+  },
+  "firestore": {
+    "/users/{userId}": { "schema": "User", "description": "User profiles" },
+    "/users/{userId}/savedContent/{contentId}": { "schema": "SavedContent", "description": "User saved content" },
+    "/quizzes/{quizId}": { "schema": "Quiz", "description": "Stored quizzes" },
+    "/attempts/{attemptId}": { "schema": "QuizAttempt", "description": "Quiz attempts" },
+    "/contests/{contestId}": { "schema": "Contest", "description": "Contests" },
+    "/institutions/{instId}": { "schema": "Institution", "description": "Institution rankings" },
+    "/notifications/{notifId}": { "schema": "Notification", "description": "User notifications" },
+    "/errorNotes/{noteId}": { "schema": "ErrorNote", "description": "User error notes" },
+    "/messages/{messageId}": { "schema": "Message", "description": "Chat messages" }
+  }
+}

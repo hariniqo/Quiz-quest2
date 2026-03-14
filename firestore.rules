@@ -1,0 +1,145 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // ===============================================================
+    // Assumed Data Model
+    // ===============================================================
+    //
+    // Collection: users
+    // Document ID: {userId} (matches request.auth.uid)
+    // Fields:
+    //   - uid: string (required)
+    //   - email: string (required)
+    //   - displayName: string
+    //   - photoURL: string
+    //   - institution: string
+    //   - institutionType: string (school|college)
+    //   - stats: map (score, streak, maxStreak, accuracy, level, xp)
+    //   - badges: list<string>
+    //   - createdAt: timestamp
+    //   - updatedAt: timestamp
+    //
+    // Collection: quizzes
+    // Fields: id, title, description, questions, createdBy, createdAt
+    //
+    // Collection: attempts
+    // Fields: id, quizId, userId, score, correctIds, incorrectIds, timestamp
+    //
+    // Collection: contests
+    // Fields: id, title, startTime, endTime, participants
+    //
+    // Collection: institutions
+    // Fields: id, name, type, totalScore
+    //
+    // ===============================================================
+
+    // Helper Functions
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+
+    function isOwner(userId) {
+      return isAuthenticated() && request.auth.uid == userId;
+    }
+
+    function isValidEmail(email) {
+      return email is string && email.matches("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$");
+    }
+
+    function isAdmin() {
+      return isAuthenticated() &&
+        (request.auth.token.email == "divyasrisudha7774@gmail.com" && request.auth.token.email_verified == true ||
+         (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.get('role', 'user') == 'admin'));
+    }
+
+    function hasOnlyAllowedFields(fields) {
+      return request.resource.data.keys().hasOnly(fields);
+    }
+
+    // Validators
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email']) &&
+             data.uid == request.auth.uid &&
+             isValidEmail(data.email);
+    }
+
+    function isValidQuiz(data) {
+      return data.keys().hasAll(['title', 'createdBy']) &&
+             data.createdBy == request.auth.uid;
+    }
+
+    function isValidAttempt(data) {
+      return data.keys().hasAll(['quizId', 'userId', 'score']) &&
+             data.userId == request.auth.uid;
+    }
+
+    match /users/{userId} {
+      allow read, list: if true; // Allow public read for profiles (needed for leaderboard)
+      allow create: if isOwner(userId) && isValidUser(request.resource.data);
+      allow update: if isOwner(userId) && isValidUser(request.resource.data);
+      allow delete: if isAdmin();
+      
+      match /savedContent/{contentId} {
+        allow read, list: if isOwner(userId);
+        allow create: if isOwner(userId) && request.resource.data.userId == userId;
+        allow update: if isOwner(userId) && request.resource.data.userId == userId;
+        allow delete: if isOwner(userId);
+      }
+    }
+
+    match /quizzes/{quizId} {
+      allow read, list: if true;
+      allow create: if isAuthenticated();
+      allow update: if isAuthenticated() && (resource.data.createdBy == request.auth.uid || isAdmin());
+      allow delete: if isAdmin() || (isAuthenticated() && resource.data.createdBy == request.auth.uid);
+    }
+
+    match /attempts/{attemptId} {
+      allow read, list: if isAuthenticated() && (resource.data.userId == request.auth.uid || isAdmin());
+      allow create: if isAuthenticated() && isValidAttempt(request.resource.data);
+      allow update, delete: if isAdmin();
+    }
+
+    match /contests/{contestId} {
+      allow read, list: if true; // Allow public read for contests
+      allow create: if isAuthenticated();
+      allow update, delete: if isAdmin();
+    }
+
+    match /institutions/{instId} {
+      allow read, list: if true; // Allow public read for institutions
+      allow write: if isAdmin();
+    }
+
+    match /notifications/{notifId} {
+      allow read, list: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /errorNotes/{noteId} {
+      allow read, list: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow create: if isAuthenticated() && request.resource.data.userId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.userId == request.auth.uid;
+      allow delete: if isAuthenticated() && resource.data.userId == request.auth.uid;
+    }
+
+    match /messages/{messageId} {
+      allow read, list: if isAuthenticated();
+      allow create: if isAuthenticated() && request.resource.data.senderId == request.auth.uid;
+      allow update: if isAuthenticated() && resource.data.receiverId == request.auth.uid;
+      allow delete: if isAdmin();
+    }
+
+    match /test/connection {
+      allow read: if true;
+    }
+
+    // Default deny
+    match /{document=**} {
+      allow read, write: if false;
+    }
+  }
+}
